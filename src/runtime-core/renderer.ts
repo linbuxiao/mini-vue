@@ -1,3 +1,4 @@
+import log from '../log.js'
 import { ShapeFlags } from "../shared";
 import { createComponentInstance } from "./component";
 import {
@@ -16,7 +17,7 @@ import { Text } from "./vnode";
 import { shouldUpdateComponent } from "./componentRenderUtils";
 
 export const render = (vnode, container) => {
-  console.log("调用 patch");
+  log("调用 `patch`");
   patch(null, vnode, container);
 };
 
@@ -33,21 +34,21 @@ function patch(n1, n2, container = null, parentComponent = null) {
     default:
       // 这里就基于 shapeFlag 来处理
       if (shapeFlag & ShapeFlags.ELEMENT) {
-        console.log("处理 element");
+        log("处理 `element`");
         processElement(n1, n2, container);
       } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-        console.log("处理 component");
+        log("处理 `component`");
         processComponent(n1, n2, container, parentComponent);
       }
   }
 }
 
 function processText(n1, n2, container) {
-  console.log("处理 Text 节点");
+  log("处理 _Text_ 节点");
   if (n1 === null) {
     // n1 是 null 说明是 init 的阶段
     // 基于 createText 创建出 text 节点，然后使用 insert 添加到 el 内
-    console.log("初始化 Text 类型的节点");
+    log("初始化 _Text_ 类型的节点");
     hostInsert((n2.el = hostCreateText(n2.children as string)), container);
   } else {
     // update
@@ -57,7 +58,7 @@ function processText(n1, n2, container) {
     // 注意，这里一定要记得把 n1.el 赋值给 n2.el, 不然后续是找不到值的
     const el = (n2.el = n1.el!);
     if (n2.children !== n1.children) {
-      console.log("更新 Text 类型的节点");
+      log("更新 _Text_ 类型的节点");
       hostSetText(el, n2.children as string);
     }
   }
@@ -76,9 +77,9 @@ function updateElement(n1, n2, container) {
   const oldProps = (n1 && n1.props) || {};
   const newProps = n2.props || {};
   // 应该更新 element
-  console.log("应该更新 element");
-  console.log("旧的 vnode", n1);
-  console.log("新的 vnode", n2);
+  log("应该更新 `element`");
+  log("旧的 `vnode`", n1);
+  log("新的 `vnode`", n2);
 
   // 需要把 el 挂载到新的 vnode
   const el = (n2.el = n1.el);
@@ -133,7 +134,7 @@ function patchChildren(n1, n2, container) {
   // 如果不一样的话直接重新设置一下 text 即可
   if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     if (c2 !== c1) {
-      console.log("类型为 text_children, 当前需要更新");
+      log("类型为 _text_children_, 当前需要更新");
       hostSetElementText(container, c2 as string);
     }
   } else {
@@ -162,13 +163,13 @@ function patchKeyedChildren(c1: any[], c2: any[], container) {
     const nextChild = c2[i];
 
     if (!isSameVNodeType(prevChild, nextChild)) {
-      console.log("两个 child 不相等(从左往右比对)");
-      console.log(`prevChild:${prevChild}`);
-      console.log(`nextChild:${nextChild}`);
+      log("两个 `child` 不相等(从左往右比对)");
+      log(`prevChild:${prevChild}`);
+      log(`nextChild:${nextChild}`);
       break;
     }
 
-    console.log("两个 child 相等，接下来对比着两个 child 节点(从左往右比对)");
+    log("两个 `child` 相等，接下来对比着两个 `child` 节点(从左往右比对)");
     patch(prevChild, nextChild, container);
     i++;
   }
@@ -179,9 +180,9 @@ function patchKeyedChildren(c1: any[], c2: any[], container) {
     const nextChild = c2[e2];
 
     if (!isSameVNodeType(prevChild, nextChild)) {
-      console.log("两个 child 不相等(从右往左比对)");
-      console.log(`prevChild:${prevChild}`);
-      console.log(`nextChild:${nextChild}`);
+      log("两个 `child` 不相等(从右往左比对)");
+      log(`prevChild:${prevChild}`);
+      log(`nextChild:${nextChild}`);
       break;
     }
     console.log("两个 child 相等，接下来对比着两个 child 节点(从右往左比对)");
@@ -284,7 +285,7 @@ function mountElement(vnode, container) {
     //     return h("div",{},"test")
     // }
     // 这里 children 就是 test ，只需要渲染一下就完事了
-    console.log(`处理文本:${vnode.children}`);
+    log(`处理文本:_${vnode.children}_`);
     hostSetElementText(el, vnode.children);
   } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
     // 举个栗子
@@ -346,12 +347,12 @@ function processComponent(n1, n2, container, parentComponent) {
 
 // 组件的更新
 function updateComponent(n1, n2, container) {
-  console.log("更新组件", n1, n2);
+  log("更新组件", n1, n2);
   // 更新组件实例引用
   const instance = (n2.component = n1.component);
   // 先看看这个组件是否应该更新
   if (shouldUpdateComponent(n1, n2)) {
-    console.log(`组件需要更新: ${instance}`);
+    log(`组件需要更新: _${instance}_`);
     // 那么 next 就是新的 vnode 了（也就是 n2）
     instance.next = n2;
     // 这里的 update 是在 setupRenderEffect 里面初始化的，update 函数除了当内部的响应式对象发生改变的时候会调用
@@ -362,7 +363,7 @@ function updateComponent(n1, n2, container) {
     // TODO 需要在 update 中处理支持 next 的逻辑
     // instance.update();
   } else {
-    console.log(`组件不需要更新: ${instance}`);
+    log(`组件不需要更新: _${instance}_`);
     // 不需要更新的话，那么只需要覆盖下面的属性即可
     n2.component = n1.component;
     n2.el = n1.el;
@@ -376,7 +377,7 @@ function mountComponent(initialVNode, container, parentComponent) {
     initialVNode,
     parentComponent
   ));
-  console.log(`创建组件实例:${instance.type.name}`);
+  log(`创建组件实例:_${instance.type.name}_`);
   // 2. 给 instance 加工加工
   setupComponent(instance);
 
@@ -403,18 +404,18 @@ function setupRenderEffect(instance, container) {
         // 为什么要在这里调用 render 函数呢
         // 是因为在 effect 内调用 render 才能触发依赖收集
         // 等到后面响应式的值变更后会再次触发这个函数
-        console.log("调用 render,获取 subTree");
+        log("调用 `render`,获取 `subTree`");
         const proxyToUse = instance.proxy;
         // 可在 render 函数中通过 this 来使用 proxy
         const subTree = (instance.subTree = instance.render.call(
           proxyToUse,
           proxyToUse
         ));
-        console.log("subTree", subTree);
+        log("subTree", subTree);
 
         // todo
-        console.log(`${instance.type.name}:触发 beforeMount hook`);
-        console.log(`${instance.type.name}:触发 onVnodeBeforeMount hook`);
+        log(`_${instance.type.name}_:触发 beforeMount hook`);
+        log(`_${instance.type.name}_:触发 onVnodeBeforeMount hook`);
 
         // 这里基于 subTree 再次调用 patch
         // 基于 render 返回的 vnode ，再次进行渲染
